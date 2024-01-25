@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yoruba Speech-to-Text Demo</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    button {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    #volumeIndicator {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background-color: green;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    #transcription {
+      background-color: white;
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Yoruba Speech-to-Text Demo</h1>
+
+  <button id="startRecording">Start Recording</button>
+  <button id="stopRecording" disabled>Stop Recording</button>
+  <button id="clearTranscription">Clear</button>
+  <div id="volumeIndicator"></div>
+  <div id="transcription"></div>
+
+  <script>
+    let recognition;
+    let audioChunks = [];
+    let volumeIndicator;
+
+    const startRecordingButton = document.getElementById('startRecording');
+    const stopRecordingButton = document.getElementById('stopRecording');
+    const clearTranscriptionButton = document.getElementById('clearTranscription');
+    const transcriptionDiv = document.getElementById('transcription');
+    volumeIndicator = document.getElementById('volumeIndicator');
+
+    startRecordingButton.addEventListener('click', startRecording);
+    stopRecordingButton.addEventListener('click', stopRecording);
+    clearTranscriptionButton.addEventListener('click', clearTranscription);
+
+    function startRecording() {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'yo-NG'; // Set language code for Yoruba
+
+      recognition.onstart = () => {
+        audioChunks = [];
+        transcriptionDiv.innerHTML = 'Recording...';
+        startRecordingButton.disabled = true;
+        stopRecordingButton.disabled = false;
+      };
+
+      recognition.onresult = (event) => {
+        const result = event.results[event.resultIndex];
+        const transcript = result[0].transcript;
+
+        transcriptionDiv.innerHTML = transcript;
+      };
+
+      recognition.onend = () => {
+        transcriptionDiv.innerHTML += '<br>Recording ended.';
+        startRecordingButton.disabled = false;
+        stopRecordingButton.disabled = true;
+        volumeIndicator.style.backgroundColor = 'green'; // Reset volume indicator color
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        transcriptionDiv.innerHTML = 'Error occurred. Please try again.';
+        startRecordingButton.disabled = false;
+        stopRecordingButton.disabled = true;
+        volumeIndicator.style.backgroundColor = 'green'; // Reset volume indicator color
+      };
+
+      recognition.onaudiostart = () => {
+        volumeIndicator.style.backgroundColor = 'green'; // Reset volume indicator color
+      };
+
+      recognition.onaudioend = () => {
+        volumeIndicator.style.backgroundColor = 'green'; // Reset volume indicator color
+      };
+
+      recognition.onsoundstart = () => {
+        volumeIndicator.style.backgroundColor = 'red'; // Change volume indicator color
+      };
+
+      recognition.onsoundend = () => {
+        volumeIndicator.style.backgroundColor = 'green'; // Reset volume indicator color
+      };
+
+      recognition.onvolumechange = (event) => {
+        const volume = event.volume; // Volume range: 0 to 1
+        const scaledVolume = volume * 100; // Scale volume to percentage
+        volumeIndicator.style.width = scaledVolume + '%';
+      };
+
+      recognition.start();
+    }
+
+    function stopRecording() {
+      if (recognition) {
+        recognition.stop();
+      }
+    }
+
+    function clearTranscription() {
+      transcriptionDiv.innerHTML = '';
+    }
+  </script>
+</body>
+</html>
